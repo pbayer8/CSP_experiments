@@ -1,0 +1,45 @@
+body {
+    margin: 0px;
+}
+input:focus,
+select:focus,
+textarea:focus,
+button:focus {
+    outline: none;
+}
+textarea {
+    border: 15px solid transparent;
+    padding: 30px;
+    padding-top: 10px;
+    margin: 0px;
+    font-family: courier, sans-serif;
+    font-size: 120px;
+    background-color: transparent;
+    resize: none;
+    word-break: break-all;
+}
+
+textarea#background {
+    color: #999;
+    border-color: #000;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    user-select: none;
+}
+
+.full{
+    width: 100%;
+    height: 100%;
+    top: 0px;
+    left: 0px;
+    position: absolute;
+    overflow: hidden;
+    box-sizing: border-box;
+    /* For IE and modern versions of Chrome */
+    -moz-box-sizing: border-box;
+    /* For Firefox                          */
+    -webkit-box-sizing: border-box;
+    /* For Safari                           */
+	
+}
