@@ -12,7 +12,9 @@
     "chai": "^4.1.2",
     "cors": "^2.8.4",
     "express": "^4.15.5",
-    "jsdom": "^11.2.0"
+    "http-proxy": "^1.16.2",
+    "jsdom": "^11.2.0",
+    "website-scraper": "^3.3.0"
   },
   "devDependencies": {
     "mocha": "^3.5.3"

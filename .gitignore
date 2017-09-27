@@ -36,4 +36,6 @@
 ehthumbs.db
 Thumbs.db
 
+# scraped pages #
+server/scraped*
 

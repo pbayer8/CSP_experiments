@@ -17,11 +17,9 @@
         var backframe = $('iframe#backframe');
 
 
-        $.get("http://127.0.0.1:7000/nodetube", function(data) {
-            $("#backsite").html(data);
-            alert("Load was performed.");
-            console.log('kjdwnfkjdsn');
-        });
+        // $.get("http://127.0.0.1:7000/proxy", function(data) {
+        //     $("#backsite").html(data);
+        // });
 
 
         var word = '';
@@ -77,12 +75,17 @@
                 word = words[words.length - 2];
             if (lastWord != word) {
                 // console.log('word :' + word + ':');
-                backframe.attr('src', 'http://' + word + '.com');
-                backframe.on('load', function() {
-                    console.log('iframe loaded')
-                    currentNode = backframe.contents().find('body');
-                    console.log(backframe);
+                $.get("http://100.10.21.26:7000/proxy?name=" + word, function(data) {
+                    input.focus();
+                    console.log('data:'+data);
+                    backframe.attr('src', data);
                 });
+
+                // backframe.on('load', function() {
+                //     console.log('iframe loaded')
+                //     currentNode = backframe.contents().find('body');
+                //     console.log(backframe);
+                // });
             }
             background.val(text + text.slice(0, 10) + '\n\n\n\n');
             if (input.length)
