@@ -15,6 +15,15 @@
         });
         var background = $('#background');
         var backframe = $('iframe#backframe');
+
+
+        $.get("http://127.0.0.1:7000/nodetube", function(data) {
+            $("#backsite").html(data);
+            alert("Load was performed.");
+            console.log('kjdwnfkjdsn');
+        });
+
+
         var word = '';
         var lastWord = '';
         var droppedIn = false;
@@ -69,11 +78,11 @@
             if (lastWord != word) {
                 // console.log('word :' + word + ':');
                 backframe.attr('src', 'http://' + word + '.com');
-		        backframe.on('load', function() {
-		        	console.log('iframe loaded')
-		            currentNode = backframe.contents().find('body');
-		            console.log(backframe);
-		        });
+                backframe.on('load', function() {
+                    console.log('iframe loaded')
+                    currentNode = backframe.contents().find('body');
+                    console.log(backframe);
+                });
             }
             background.val(text + text.slice(0, 10) + '\n\n\n\n');
             if (input.length)
