@@ -8,20 +8,12 @@
         // The DOM is ready!
         setTextHeight();
         var input = $('#input');
-        input.focus();
-        // Force focus
         input.focusout(function() {
-            input.focus();
+            focusCaret(input);
         });
+        focusCaret(input);
         var background = $('#background');
         var backframe = $('iframe#backframe');
-
-
-        // $.get("http://127.0.0.1:7000/proxy", function(data) {
-        //     $("#backsite").html(data);
-        // });
-
-
         var word = '';
         var lastWord = '';
         var droppedIn = false;
@@ -32,6 +24,7 @@
                     if (e.shiftKey) {
                         //TODO drop in
                         droppedIn = !droppedIn;
+                        console.log('were in=' + droppedIn);
                     } else {
                         e.preventDefault();
                     }
@@ -39,22 +32,25 @@
                 case 38: //up
                 case 40: //down
                     if (droppedIn) {
-                        console.log('were in');
-                        // do {
-                        if (currentNode.children().length) {
-                            currentNode = currentNode.children()[0];
-                        } else if (currentNode.next().length) {
-                            currentNode = currentNode.next()[0];
-                        } else {
-                            currentNode = currentNode.parent();
-                            if (currentNode.next().length) {
-                                currentNode = currentNode.next()[0];
-                            }
-                        }
-                        console.log(currentNode.tagName)
-                        // } while (!currentNode.val() && currentNode != $('body'));
+                        console.log('edit');
+                        $.get("http://philips-macbook-pro.local:8080/edit?name=" + word + '&uuid=' + uuid, function(data) {
+                            console.log('back!:');
+                            backframe.attr('src', function(i, val) { return val; });
+                        });
+
+                        // if (currentNode.children().length) {
+                        //     currentNode = currentNode.children()[0];
+                        // } else if (currentNode.next().length) {
+                        //     currentNode = currentNode.next()[0];
+                        // } else {
+                        //     currentNode = currentNode.parent();
+                        //     if (currentNode.next().length) {
+                        //         currentNode = currentNode.next()[0];
+                        //     }
+                        // }
+                        // console.log(currentNode.tagName)
                     }
-                    currentNode.css('background-color', 'red');
+                    // currentNode.css('background-color', 'red');
                 case 39: //right
                 case 37: //left
                     e.preventDefault();
@@ -75,9 +71,9 @@
                 word = words[words.length - 2];
             if (lastWord != word) {
                 // console.log('word :' + word + ':');
-                $.get("http://100.10.21.26:7000/proxy?name=" + word, function(data) {
-                    input.focus();
-                    console.log('data:'+data);
+                $.get('http://philips-macbook-pro.local:8080/proxy?name=' + word, function(data) {
+                    focusCaret(input);
+                    console.log('data:' + data);
                     backframe.attr('src', data);
                 });
 
@@ -92,6 +88,7 @@
                 background.scrollTop(input.scrollTop());
         });
     });
+    var uuid = userID();
 
     function setTextHeight() {
         var height = $(window).height();
@@ -99,9 +96,18 @@
         $('#background').outerHeight(height);
     }
 
-    $("#set-textarea").click(function() {
-        setCaretToPos($("#the-textarea")[0], 10)
-    });
+    function focusCaret(input) {
+        input.focus();
+        val = input.val();
+        input.val('');
+        input.val(val);
+    }
+
+    function userID() {
+        return Math.random().toString(36).substring(2, 15) +
+            Math.random().toString(36).substring(2, 15);
+    }
+
     // The rest of the code goes here!
     $(window).resize(setTextHeight);
 

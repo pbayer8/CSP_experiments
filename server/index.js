@@ -1,35 +1,19 @@
-var express = require('express');
-var jsdom = require('jsdom');
-var request = require('request');
-var http = require('http');
-var cors = require('cors');
-var httpProxy = require('http-proxy');
-var scrape = require('website-scraper');
-var url = require('url');
+const express = require('express');
+const jsdom = require("jsdom/lib/old-api.js");
+const cors = require('cors');
+const scrape = require('website-scraper');
+const fs = require('fs');
 
 app = express();
 app.use(cors());
-// app.all("*", function(request, response, next) {
-//     response.writeHead(200, { "Content-Type": "text/plain" });
-//     next();
-// });
 
+//TODO: refactor into proper DB LOL!
+user_position = {}
 
-var proxy = httpProxy.createProxyServer({});
-
-
-app.get("/frame", function(request, response) {
-    response.end("Welcome to the about page!");
-});
+//TODO: refactor into proper cloud storage maybe w/ DB lookup
 app.get('/proxy', function(req, res) {
-    // proxy.web(req, res, { target: req.query.url });
-    // proxy.on('proxyRes', function(proxyRes, request, response) {
-    //     proxyRes.pipe(response);
-    // });
-    // request.pipe(require('request')('http://leaf.com' )).pipe(response);
-    //request(req.query.url).pipe(res);
-    var dir = './scraped_' + req.query.name;
-    var fullDir = './server/scraped_' + req.query.name + '/index.html';
+    var dir = './scraped/' + req.query.name;
+    var fullDir = './server/scraped/' + req.query.name + '/index.html';
     var url = 'http://' + req.query.name + '.com';
 
     var options = {
@@ -42,46 +26,92 @@ app.get('/proxy', function(req, res) {
         console.log('scraping');
         res.end(fullDir);
     }).catch((err) => {
-        console.log(err)
         res.end(fullDir);
     });
 
-    // var queryData = url.parse(req.query.url, true).query;
-    // if (queryData.url) {
-    //     request({
-    //         url: queryData.url
-    //     }).on('error', function(e) {
-    //         res.end(e);
-    //     }).pipe(res);
-    // }
-    //res.end();
-});
-app.get('/nodetube', function(request, response) {
-    //Tell the request that we want to fetch youtube.com, send the results to a callback function
-    // request({ uri: 'http://leaf.com' }, function(err, response, body) {
-    //     var self = this;
-    //     self.items = new Array(); //I feel like I want to save my results in an array
-
-    //Just a basic error check
-    // if (err && response.statusCode !== 200) { console.log('Request error.'); }
-    //Send the body param as the HTML code we will parse in jsdom
-    //also tell jsdom to attach jQuery in the scripts and loaded from jQuery.com
-    // jsdom.env({
-    //     html: body,
-    //     scripts: ['http://code.jquery.com/jquery-1.6.min.js']
-    // }, function(err, window) {
-    //     //Use jQuery just as in a regular HTML page
-    //     var $ = window.jQuery;
-
-    //     console.log($('title').text());
-    //     res.end($('title').text());
-    // });
-    // res.end(body);
-    // });
 });
 
-app.get("*", function(request, response) {
+app.get('/edit', function(req, res) {
+    console.log('edit');
+    var dir = './scraped/' + req.query.name;
+    var fullDir = './scraped/' + req.query.name + '/index.html';
+    var url = 'http://' + req.query.name + '.com';
+    var user = req.query.uuid;
+    var htmlSource = fs.readFileSync(fullDir, "utf8");
+    var currentNode = user_position.user;
+    callJSDOM(htmlSource, function(window) {
+        var $ = window.$;
+        console.log('user:' + user_position.user);
+        do {
+            if (user_position.user == null)
+                currentNode = $('body');
+            if ($(currentNode).children().length) {
+                console.log('children');
+                currentNode = $(currentNode).children()[0];
+            } else if ($(currentNode).next().length) {
+                currentNode = $(currentNode).next()[0];
+                console.log('sibling');
+            } else {
+                while ($(currentNode).next().length == 0 && $(currentNode) != $('body')) {
+                    currentNode = $(currentNode).parent()[0];
+                    console.log('back out');
+                }
+                if ($(currentNode).next().length) {
+                    console.log('sibling');
+                    currentNode = $(currentNode).next()[0];
+                }
+            }
+            user_position.user = currentNode;
+        } while (immediateText($(currentNode)) == 0);
+        console.log('user:' + user_position.user);
+        $(currentNode).css('color', '#F00');
+        fs.writeFileSync(fullDir, $('html')[0].outerHTML);
+        $('#jsdom').remove();
+        res.end();
+    });
+
+    function callJSDOM(source, callback) {
+        jsdom.env(
+            source, ['../jquery-3.2.1.min.js'], // (*)
+            function(errors, window) { // (**)
+                process.nextTick(
+                    function() {
+                        if (errors) {
+                            throw new Error("There were errors: " + errors);
+                        }
+                        callback(window);
+                    }
+                );
+            }
+        );
+    }
+
+    function immediateText(node, text) {
+        if (text == null) {
+            try {
+
+                textVal = node.contents().filter(function() {
+                    return this.nodeType == 3;
+                })[0].nodeValue;
+                console.log(textVal);
+                console.log(textVal.trim().length);
+            } catch (err) {
+                //TODO: proper error handling
+                textVal = " ";
+            }
+            return textVal.trim().length;
+        } else {
+            textVal = node.contents().filter(function() {
+                return this.nodeType == 3;
+            })[0].nodeValue = text;
+            return false;
+        }
+    }
+
+});
+
+app.get("*", function(req, res) {
     response.end("404!");
 });
 
-app.listen(7000);
+app.listen(8080);
