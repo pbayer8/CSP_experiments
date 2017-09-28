@@ -38,35 +38,32 @@ app.get('/edit', function(req, res) {
     var url = 'http://' + req.query.name + '.com';
     var user = req.query.uuid;
     var htmlSource = fs.readFileSync(fullDir, "utf8");
-    var currentNode = user_position.user;
+    var currNode = null;
+    if(user_position[user]==null)
+    	user_position[user] = {};
+    if(user_position[user].pos==null)
+    	user_position[user].pos=0;
     callJSDOM(htmlSource, function(window) {
         var $ = window.$;
-        console.log('user:' + user_position.user);
+        var items = window.document.body.getElementsByTagName('*');
+        var len = items.length;
+        console.log(len+' visible items');
+        console.log('user:' + user_position[user].pos);
+        $(items[user_position[user].pos]).removeAttr('style');
         do {
-            if (user_position.user == null)
-                currentNode = $('body');
-            if ($(currentNode).children().length) {
-                console.log('children');
-                currentNode = $(currentNode).children()[0];
-            } else if ($(currentNode).next().length) {
-                currentNode = $(currentNode).next()[0];
-                console.log('sibling');
-            } else {
-                while ($(currentNode).next().length == 0 && $(currentNode) != $('body')) {
-                    currentNode = $(currentNode).parent()[0];
-                    console.log('back out');
-                }
-                if ($(currentNode).next().length) {
-                    console.log('sibling');
-                    currentNode = $(currentNode).next()[0];
-                }
-            }
-            user_position.user = currentNode;
-        } while (immediateText($(currentNode)) == 0);
-        console.log('user:' + user_position.user);
-        $(currentNode).css('color', '#F00');
+            user_position[user].pos++;
+            currNode = $(items[user_position[user].pos]);
+            console.log(currNode);
+        } while (immediateText(currNode) == 0 && user_position[user].pos < len);
+        if (user_position[user].pos >= len)
+        	user_position[user].pos = 0;
+        //TODO: header hack!
+        console.log('user:' + user_position[user].pos);
+        //NOTE: script tag removal broken
+        $('script#jsdom').remove();
+        $('script#jsdom').remove();
+        $(items[user_position[user].pos]).css('color', '#F00');
         fs.writeFileSync(fullDir, $('html')[0].outerHTML);
-        $('#jsdom').remove();
         res.end();
     });
 
