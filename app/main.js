@@ -23,14 +23,25 @@
 
         input.bind('input propertychange', keyBinding);
 
+
+        socket.on('new_page', function(data) {
+            backframe.attr('src', data.src);
+            focusCaret(input);
+        })
+
+        function focusCaret(input) {
+            input.focus();
+            val = input.val();
+            input.val('');
+            input.val(val);
+        }
+
         function keyBinding() {
             text = input.val();
             if (droppedIn) {
                 var replacement = text.slice(startSlice, text.length);
-                $.get("http://philips-macbook-pro.local:8080/edit?name=" + word + '&uuid=' + uuid + '&text=' + replacement, function(data) {
-                    focusCaret(input);
-                    backframe.attr('src', data);
-                });
+                console.log(replacement);
+                socket.emit('edit', { page: word, user: uuid, text: replacement });
             } else {
                 var words = text.split(/\W+/);
                 lastWord = word;
@@ -38,10 +49,7 @@
                 if (!word.length)
                     word = words[words.length - 2];
                 if (lastWord != word) {
-                    $.get('http://philips-macbook-pro.local:8080/proxy?name=' + word, function(data) {
-                        focusCaret(input);
-                        backframe.attr('src', data);
-                    });
+                    socket.emit('refresh', { page: word });
                 }
             }
         };
@@ -55,24 +63,20 @@
                         if (droppedIn) {
                             startSlice = text.length;
                             freezeWord = word;
+                            socket.emit('enter_edit', { user: uuid, page: word });
                         } else {
-                            $.get("http://philips-macbook-pro.local:8080/edit?name=" + word + '&uuid=clear', function(data) {
-                                focusCaret(input);
-                                input.val(input.val() + ' ' + freezeWord);
-                            });
+                            socket.emit('leave_edit', { user: uuid, page: word });
+                            input.val(input.val() + ' ' + freezeWord);
                         }
 
-                    } else {
-                        e.preventDefault();
                     }
+                    e.preventDefault();
                     break;
                 case 38: //up
                 case 40: //down
                     if (droppedIn) {
                         startSlice = text.length;
-                        $.get("http://philips-macbook-pro.local:8080/edit?name=" + word + '&uuid=' + uuid, function(data) {
-                            backframe.attr('src', function(i, val) { return val; });
-                        });
+                        socket.emit('next', { user: uuid, page: word });
                     }
                 case 39: //right
                 case 37: //left
@@ -86,16 +90,11 @@
     });
     var uuid = userID();
 
+    var socket = io.connect('http://philips-macbook-pro.local:8080')
+
     function setTextHeight() {
         var height = $(window).height();
         $('#input').outerHeight(height);
-    }
-
-    function focusCaret(input) {
-        input.focus();
-        val = input.val();
-        input.val('');
-        input.val(val);
     }
 
     function userID() {
