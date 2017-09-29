@@ -3,6 +3,7 @@ const jsdom = require("jsdom/lib/old-api.js");
 const cors = require('cors');
 const scrape = require('website-scraper');
 const fs = require('fs');
+const io = require('socket.io');
 
 app = express();
 app.use(cors());
@@ -122,7 +123,7 @@ var options = {
   index: "index.html"
 };
 
-app.use('/', express.static('../app', options));
+app.use('/', express.static('app/', options));
 
 app.get("*", function(req, res) {
     res.end("404!");

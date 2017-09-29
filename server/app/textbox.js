@@ -21,6 +21,12 @@
         var startSlice = 0;
         input.keydown(keyHandler);
 
+        // var socket = io.connect('http://localhost');
+        // socket.on('news', function(data) {
+        //     console.log(data);
+        //     socket.emit('my other event', { my: 'data' });
+        // });
+
         input.bind('input propertychange', keyBinding);
 
         function keyBinding() {
