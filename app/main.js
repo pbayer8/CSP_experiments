@@ -35,7 +35,6 @@
             text = input.val();
             if (droppedIn) {
                 var replacement = text.slice(startSlice, text.length);
-                console.log(replacement);
                 socket.emit('edit', { page: word, user: uuid, text: replacement });
             } else {
                 var words = text.split(/\W+/);
