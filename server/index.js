@@ -170,7 +170,7 @@ var options = {
     index: "index.html"
 };
 
-app.use('/', express.static('../app', options));
+app.use('/', express.static('app/', options));
 
 app.get("*", function(req, res) {
     res.end("404!");
