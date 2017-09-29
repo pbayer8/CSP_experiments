@@ -15,8 +15,8 @@ userLocation = {}
 
 function callJSDOM(source, callback) {
     jsdom.env(
-        source, ['../app/jquery-3.2.1.min.js'], // (*)
-        function(errors, window) { // (**)
+        source, ['../app/jquery-3.2.1.min.js'],
+        function(errors, window) {
             process.nextTick(
                 function() {
                     if (errors) {
@@ -49,24 +49,22 @@ function immediateText(node, text, callback) {
     }
 }
 
-function highlightNextRed(window, user, callback) {
+function highlightNewRed(window, user, direction, callback) {
     var $ = window.$;
     var items = window.document.body.getElementsByTagName('*');
     var len = items.length;
     var currNode;
     $(items[userLocation[user].pos]).removeAttr('style');
     do {
-        userLocation[user].pos++;
+        userLocation[user].pos += direction;
         currNode = $(items[userLocation[user].pos]);
-    } while (immediateText(currNode) == 0 && userLocation[user].pos < len);
+    } while (immediateText(currNode) == 0 && userLocation[user].pos < len && userLocation[user].pos >= 0);
     if (userLocation[user].pos >= len)
         userLocation[user].pos = 0;
+    else if (userLocation[user].pos <= 0)
+        userLocation[user].pos = len - 1;
     //TODO: header hack!
-    //NOTE: script tag removal broken
     $(items[userLocation[user].pos]).css('color', '#F00');
-
-    $('script#jsdom').remove();
-
     callback();
 }
 
@@ -78,8 +76,9 @@ function clearHighlights(window, user, callback) {
     do {
         userLocation[user].pos++;
         currNode = $(items[userLocation[user].pos]);
-        currNode.removeAttr('style');
-    } while (immediateText(currNode) == 0 && userLocation[user].pos < len);
+        if (immediateText(currNode))
+            currNode.removeAttr('style');
+    } while (userLocation[user].pos < len);
     callback();
 }
 
@@ -93,51 +92,20 @@ function getDirs(name) {
 }
 
 function writeFileEmitPage(dirs, socket, window) {
+    var $ = window.$;
+    $('html').find('script').remove();
     fs.writeFileSync(dirs.serverFile, window.document.documentElement.outerHTML);
     socket.emit('new_page', { src: dirs.client });
 }
 
 //TODO: refactor into proper cloud storage maybe w/ DB lookup
 
-app.get('/edit', function(req, res) {
-    var user = req.query.uuid;
-    var text = '';
-    if (req.query.text)
-        text = req.query.text;
-    var htmlSource = fs.readFileSync(serverDir, "utf8");
-    var currNode = null;
-    callJSDOM(htmlSource, function(window) {
-        var $ = window.$;
-        var items = window.document.body.getElementsByTagName('*');
-        var len = items.length;
-        if (text.length) {
-            currNode = $(items[userLocation[user].pos]);
-            immediateText(currNode, text);
-        } else {
-            $(items[userLocation[user].pos]).removeAttr('style');
-            do {
-                userLocation[user].pos++;
-                currNode = $(items[userLocation[user].pos]);
-            } while (immediateText(currNode) == 0 && userLocation[user].pos < len);
-            if (userLocation[user].pos >= len)
-                userLocation[user].pos = 0;
-            //TODO: header hack!
-            //NOTE: script tag removal broken
-            $(items[userLocation[user].pos]).css('color', '#F00');
-        }
-        $('script#jsdom').remove();
-        fs.writeFileSync(serverDir, $('html')[0].outerHTML);
-        res.end(clientDir);
-    });
-
-});
-
 io.on('connection', function(socket) {
     socket.on('refresh', function(data) {
         var dirs = getDirs(data.page);
         var options = {
             urls: [dirs.url],
-            directory: dirs.server,
+            directory: dirs.server
         };
         scrape(options).then((result) => {
             socket.emit('new_page', { src: dirs.client });
@@ -157,7 +125,7 @@ io.on('connection', function(socket) {
         var currNode = null;
         callJSDOM(htmlSource, function(window) {
             userLocation[user].window = window;
-            highlightNextRed(window, user, () => {
+            highlightNewRed(window, user, 1, () => {
                 writeFileEmitPage(dirs, socket, window);
             });
         });
@@ -171,16 +139,16 @@ io.on('connection', function(socket) {
         var items = window.document.body.getElementsByTagName('*');
         var len = items.length;
         currNode = $(items[userLocation[user].pos]);
-        immediateText(currNode, data.text, () =>{
+        immediateText(currNode, data.text, () => {
             writeFileEmitPage(dirs, socket, window);
         });
     });
 
-    socket.on('next', function(data) {
+    socket.on('nav', function(data) {
         var dirs = getDirs(data.page);
         var user = data.user;
         var window = userLocation[user].window;
-        highlightNextRed(window, user, () => {
+        highlightNewRed(window, user, data.direction, () => {
             writeFileEmitPage(dirs, socket, window);
         });
     });

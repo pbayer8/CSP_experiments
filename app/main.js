@@ -1,11 +1,6 @@
-// IIFE - Immediately Invoked Function Expression
 (function($, window, document) {
 
-    // The $ is now locally scoped 
-
-    // Listen for the jQuery ready event on the document
     $(function() {
-        // The DOM is ready!
         setTextHeight();
         var input = $('#input');
         var droppedIn = false;
@@ -14,10 +9,10 @@
         });
         focusCaret(input);
         var backframe = $('iframe#backframe');
-        var word = '';
-        var freezeWord = '';
-        var lastWord = '';
-        var text = '';
+        var word = 'here';
+        var freezeWord = 'here';
+        var lastWord = 'here';
+        var text = input.val();
         var startSlice = 0;
         input.keydown(keyHandler);
 
@@ -56,15 +51,16 @@
 
         function keyHandler(e) {
             switch (e.keyCode) {
-                case 13:
+                case 13: //enter
                     if (e.shiftKey) {
-                        //TODO drop in
                         droppedIn = !droppedIn;
                         if (droppedIn) {
+                            input.css({opacity: .2});
                             startSlice = text.length;
                             freezeWord = word;
                             socket.emit('enter_edit', { user: uuid, page: word });
                         } else {
+                            input.css({opacity: 1});
                             socket.emit('leave_edit', { user: uuid, page: word });
                             input.val(input.val() + ' ' + freezeWord);
                         }
@@ -73,11 +69,19 @@
                     e.preventDefault();
                     break;
                 case 38: //up
+                    if (droppedIn) {
+                        startSlice = text.length;
+                        socket.emit('nav', { user: uuid, page: word, direction: -1 });
+                    }
+                    e.preventDefault();
+                    break;
                 case 40: //down
                     if (droppedIn) {
                         startSlice = text.length;
-                        socket.emit('next', { user: uuid, page: word });
+                        socket.emit('nav', { user: uuid, page: word, direction: 1 });
                     }
+                    e.preventDefault();
+                    break;
                 case 39: //right
                 case 37: //left
                     e.preventDefault();
@@ -105,4 +109,3 @@
     $(window).resize(setTextHeight);
 
 }(window.jQuery, window, document));
-// The global jQuery object is passed as a parameter
