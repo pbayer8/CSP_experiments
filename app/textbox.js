@@ -40,7 +40,6 @@
                 if (lastWord != word) {
                     $.get('http://philips-macbook-pro.local:8080/proxy?name=' + word, function(data) {
                         focusCaret(input);
-                        console.log('data:' + data);
                         backframe.attr('src', data);
                     });
                 }
@@ -62,7 +61,6 @@
                                 input.val(input.val() + ' ' + freezeWord);
                             });
                         }
-                        console.log('were in=' + droppedIn);
 
                     } else {
                         e.preventDefault();
@@ -72,7 +70,6 @@
                 case 40: //down
                     if (droppedIn) {
                         startSlice = text.length;
-                        console.log('edit');
                         $.get("http://philips-macbook-pro.local:8080/edit?name=" + word + '&uuid=' + uuid, function(data) {
                             backframe.attr('src', function(i, val) { return val; });
                         });

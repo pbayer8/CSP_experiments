@@ -12,7 +12,7 @@ user_position = {}
 
 function callJSDOM(source, callback) {
     jsdom.env(
-        source, ['../jquery-3.2.1.min.js'], // (*)
+        source, ['../app/jquery-3.2.1.min.js'], // (*)
         function(errors, window) { // (**)
             process.nextTick(
                 function() {
@@ -33,8 +33,6 @@ function immediateText(node, text) {
             textVal = node.contents().filter(function() {
                 return this.nodeType == 3;
             })[0].nodeValue;
-            console.log(textVal);
-            console.log(textVal.trim().length);
         } catch (err) {
             //TODO: proper error handling
             textVal = " ";
@@ -47,38 +45,38 @@ function immediateText(node, text) {
         return true;
     }
 }
+
+
+
 //TODO: refactor into proper cloud storage maybe w/ DB lookup
 app.get('/proxy', function(req, res) {
-    var dir = './scraped/' + req.query.name;
-    var fullDir = './server/scraped/' + req.query.name + '/index.html';
+    var serverDir = '../app/scraped/' + req.query.name;
+    var clientDir = './scraped/' + req.query.name + '/index.html';
     var url = 'http://' + req.query.name + '.com';
 
     var options = {
         urls: [url],
-        directory: dir,
+        directory: serverDir,
     };
 
     // with promise
     scrape(options).then((result) => {
-        console.log('scraping');
-        res.end(fullDir);
+        res.end(clientDir);
     }).catch((err) => {
-        res.end(fullDir);
+        res.end(clientDir);
     });
 
 });
 
 app.get('/edit', function(req, res) {
-    console.log('edit');
-    var dir = './scraped/' + req.query.name;
-    var localFullDir = './scraped/' + req.query.name + '/index.html';
-    var fullDir = './server/scraped/' + req.query.name + '/index.html';
+    var serverDir = '../app/scraped/' + req.query.name + '/index.html';
+    var clientDir = './scraped/' + req.query.name + '/index.html';
     var url = 'http://' + req.query.name + '.com';
     var user = req.query.uuid;
     var text = '';
     if (req.query.text)
         text = req.query.text;
-    var htmlSource = fs.readFileSync(localFullDir, "utf8");
+    var htmlSource = fs.readFileSync(serverDir, "utf8");
     var currNode = null;
     if (user_position[user] == null) {
         user_position[user] = {};
@@ -95,7 +93,7 @@ app.get('/edit', function(req, res) {
                 currNode = $(items[user_position[user].pos]);
                 currNode.removeAttr('style');
             } while (immediateText(currNode) == 0 && user_position[user].pos < len);
-            res.end(fullDir);
+            res.end(clientDir);
         }
         if (text.length) {
             currNode = $(items[user_position[user].pos]);
@@ -105,7 +103,6 @@ app.get('/edit', function(req, res) {
             do {
                 user_position[user].pos++;
                 currNode = $(items[user_position[user].pos]);
-                console.log(currNode);
             } while (immediateText(currNode) == 0 && user_position[user].pos < len);
             if (user_position[user].pos >= len)
                 user_position[user].pos = 0;
@@ -114,16 +111,21 @@ app.get('/edit', function(req, res) {
             $(items[user_position[user].pos]).css('color', '#F00');
         }
         $('script#jsdom').remove();
-        fs.writeFileSync(localFullDir, $('html')[0].outerHTML);
-        res.end(fullDir);
+        fs.writeFileSync(serverDir, $('html')[0].outerHTML);
+        res.end(clientDir);
     });
 
 });
 
 
+var options = {
+  index: "index.html"
+};
+
+app.use('/', express.static('../app', options));
 
 app.get("*", function(req, res) {
-    response.end("404!");
+    res.end("404!");
 });
 
 app.listen(8080);
