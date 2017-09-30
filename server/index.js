@@ -157,7 +157,7 @@ io.on('connection', function(socket) {
         var dirs = getDirs(data.page);
         var user = data.user;
         var window = userLocation[user].window;
-        clearHighlights(window, user, () => {
+        clearHighlights(window, user, () => { 
             writeFileEmitPage(dirs, socket, window);
         });
     });
@@ -176,4 +176,4 @@ app.get("*", function(req, res) {
     res.end("404!");
 });
 
-server.listen(8080);
+server.listen(3000);

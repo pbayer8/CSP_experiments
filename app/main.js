@@ -54,12 +54,12 @@
                     if (e.shiftKey) {
                         droppedIn = !droppedIn;
                         if (droppedIn) {
-                            input.css({opacity: .2});
+                            input.css({ opacity: .2 });
                             startSlice = text.length;
                             freezeWord = word;
                             socket.emit('enter_edit', { user: uuid, page: word });
                         } else {
-                            input.css({opacity: 1});
+                            input.css({ opacity: 1 });
                             socket.emit('leave_edit', { user: uuid, page: word });
                             input.val(input.val() + ' ' + freezeWord);
                         }
@@ -93,7 +93,7 @@
     });
     var uuid = userID();
 
-    var socket = io.connect('http://philips-macbook-pro.local:8080')
+    var socket = io.connect('http://philips-macbook-pro.local:3000');
 
     function setTextHeight() {
         var height = $(window).height();
