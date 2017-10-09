@@ -20,8 +20,9 @@
 
 
         socket.on('new_page', function(data) {
-            backframe.attr('src', data.src);
-            focusCaret(input);
+            //Could do this but causes sync errors TODO: fix sync
+            //backframe.attr('src', data.src);
+            refreshIframe();
         })
 
         function focusCaret(input) {
@@ -29,6 +30,11 @@
             val = input.val();
             input.val('');
             input.val(val);
+        }
+
+        function refreshIframe(newWord = word){
+            backframe.attr('src', './scraped/' + newWord + '/index.html');
+            focusCaret(input);
         }
 
         function keyBinding() {
@@ -93,7 +99,7 @@
     });
     var uuid = userID();
 
-    var socket = io.connect('http://philips-macbook-pro.local:3000');
+    var socket = io.connect('http://localhost:3000');
 
     function setTextHeight() {
         var height = $(window).height();
