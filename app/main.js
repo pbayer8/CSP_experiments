@@ -2,6 +2,7 @@
 
     $(function() {
         var input = $('#input');
+        var frame = $('#frame');
         var droppedIn = false;
         var backframe = $('iframe#backframe');
         var word = 'here';
@@ -13,8 +14,8 @@
         var charDim = { 'width': 20, 'height': 40 };
         var dimObj = {};
         var textOffset = {};
-        windowResize();
         getTextOffset();
+        windowResize();
         $(document).keydown(keyHandler);
         $(document).keypress(otherKey);
         $(window).resize(windowResize);
@@ -35,7 +36,7 @@
                 char = '\&nbsp'
             } else {
                 redrawCircle(input.text().length);
-                checkForOverflow(input.text().length);
+                // checkForOverflow(input.text().length);
             }
             input.html(input.html() + char);
             text = input.text();
@@ -56,17 +57,18 @@
         };
 
         function keyHandler(e) {
+            console.log(e.keyCode);
             switch (e.keyCode) {
                 case 13: //enter
                     if (e.shiftKey) {
                         droppedIn = !droppedIn;
                         if (droppedIn) {
-                            input.css({ 'left': '50%' });
+                            frame.css({ left: '50%' });
                             startSlice = text.length;
                             freezeWord = word;
                             socket.emit('enter_edit', { user: uuid, page: word, ext: 'com' });
                         } else {
-                            input.css({ 'left': 0 });
+                            frame.css({ 'left': 0 });
                             socket.emit('leave_edit', { user: uuid, page: word, ext: 'com' });
                             input.val(input.val() + ' ' + freezeWord);
                         }
@@ -88,7 +90,8 @@
                     }
                     e.preventDefault();
                     break;
-                case 8:
+                case 8: //del
+                case 27: //esc
                 case 39: //right
                 case 37: //left
                     e.preventDefault();
@@ -108,29 +111,29 @@
 
 
         function windowResize() {
-            setTextHeight();
+            setTextboxHeight();
             updateCharCount();
             for (i = 0; i < 2; i++) {
                 redrawCircle(i);
             }
         }
 
-        function setTextHeight() {
+        function setTextboxHeight() {
             var height = $(window).height();
             input.outerHeight(height);
         }
 
         //TODO make this dynamically add a span to the input then get its offset
         function getTextOffset() {
-            textOffset.top = $('#offset').offset().top;
-            textOffset.left = $('#offset').offset().left;
+            textOffset.top = input.position().top;
+            textOffset.left = input.position().left;
         }
 
         function updateCharCount() {
             charDim = textDim('W', '80px Inconsolata');
             //charDim.width = input.textWidth()/input.text().length;
-            charGrid.width = Math.floor(input.width() / charDim.width);
-            charGrid.height = Math.floor(input.height() / charDim.height);
+            charGrid.width = Math.floor(frame.width() / charDim.width);
+            charGrid.height = Math.floor(frame.height() / charDim.height);
         }
 
         function getCharCoords(charIndex) {
@@ -157,11 +160,11 @@
             return {'x':x,'y':y}
         }
 
-        function checkForOverflow(charIndex){
-            var cp = getCharPos(charIndex);
-            if (cp.y + charDim.height > input.innerHeight())
-                input.text(input.text().slice(charGrid.width));
-        }
+        // function checkForOverflow(charIndex){
+        //     var cp = getCharPos(charIndex);
+        //     if (cp.y + charDim.height > input.innerHeight())
+        //         input.text(input.text().slice(charGrid.width));
+        // }
 
         function redrawCircle(charIndex) {
             var svg = {};
