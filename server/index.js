@@ -88,12 +88,12 @@ function clearHighlights(window, user, callback) {
     callback();
 }
 
-function getDirs(name) {
+function getDirs(name, ext) {
     var dirs = {}
-    dirs.server = '../app/scraped/' + name;
-    dirs.serverFile = '../app/scraped/' + name + '/index.html';
-    dirs.client = './scraped/' + name + '/index.html';
-    dirs.url = 'http://' + name + '.com';
+    dirs.server = '../app/scraped/' + name + '_' + ext;
+    dirs.serverFile = '../app/scraped/' + name + '_' + ext + '/index.html';
+    dirs.client = './scraped/' + name + '_' + ext + '/index.html';
+    dirs.url = 'http://' + name + '.' + ext;
     return dirs;
 }
 
@@ -108,7 +108,7 @@ function writeFileEmitPage(dirs, socket, window) {
 
 io.on('connection', function(socket) {
     socket.on('refresh', function(data) {
-        var dirs = getDirs(data.page);
+        var dirs = getDirs(data.page, data.ext);
         var options = {
             urls: [dirs.url],
             directory: dirs.server,
@@ -122,7 +122,7 @@ io.on('connection', function(socket) {
                 { selector: 'input', attr: 'src' },
                 { selector: 'object', attr: 'data' },
                 { selector: 'embed', attr: 'src' },
-                { selector: 'param[name="movie"]', attr: 'value' },
+                // { selector: 'param[name="movie"]', attr: 'value' },
                 // { selector: 'script', attr: 'src' },
                 { selector: 'link[rel="stylesheet"]', attr: 'href' },
                 { selector: 'link[rel*="icon"]', attr: 'href' },
@@ -132,18 +132,18 @@ io.on('connection', function(socket) {
                 { selector: 'meta[property="og\\:image"]', attr: 'content' },
                 { selector: 'meta[property="og\\:image\\:url"]', attr: 'content' },
                 { selector: 'meta[property="og\\:image\\:secure_url"]', attr: 'content' },
-                { selector: 'meta[property="og\\:audio"]', attr: 'content' },
-                { selector: 'meta[property="og\\:audio\\:url"]', attr: 'content' },
-                { selector: 'meta[property="og\\:audio\\:secure_url"]', attr: 'content' },
-                { selector: 'meta[property="og\\:video"]', attr: 'content' },
-                { selector: 'meta[property="og\\:video\\:url"]', attr: 'content' },
-                { selector: 'meta[property="og\\:video\\:secure_url"]', attr: 'content' },
-                { selector: 'video', attr: 'src' },
-                { selector: 'video source', attr: 'src' },
-                { selector: 'video track', attr: 'src' },
-                { selector: 'audio', attr: 'src' },
-                { selector: 'audio source', attr: 'src' },
-                { selector: 'audio track', attr: 'src' },
+                // { selector: 'meta[property="og\\:audio"]', attr: 'content' },
+                // { selector: 'meta[property="og\\:audio\\:url"]', attr: 'content' },
+                // { selector: 'meta[property="og\\:audio\\:secure_url"]', attr: 'content' },
+                // { selector: 'meta[property="og\\:video"]', attr: 'content' },
+                // { selector: 'meta[property="og\\:video\\:url"]', attr: 'content' },
+                // { selector: 'meta[property="og\\:video\\:secure_url"]', attr: 'content' },
+                // { selector: 'video', attr: 'src' },
+                // { selector: 'video source', attr: 'src' },
+                // { selector: 'video track', attr: 'src' },
+                // { selector: 'audio', attr: 'src' },
+                // { selector: 'audio source', attr: 'src' },
+                // { selector: 'audio track', attr: 'src' },
                 // { selector: 'frame', attr: 'src' },
                 // { selector: 'iframe', attr: 'src' }
             ]
@@ -156,7 +156,7 @@ io.on('connection', function(socket) {
     });
 
     socket.on('enter_edit', function(data) {
-        var dirs = getDirs(data.page);
+        var dirs = getDirs(data.page, data.ext);
         var user = data.user;
         if (userLocation[user] == null) {
             userLocation[user] = {};
@@ -173,7 +173,7 @@ io.on('connection', function(socket) {
     });
 
     socket.on('edit', function(data) {
-        var dirs = getDirs(data.page);
+        var dirs = getDirs(data.page, data.ext);
         var user = data.user;
         var window = userLocation[user].window;
         var $ = window.$;
@@ -186,7 +186,7 @@ io.on('connection', function(socket) {
     });
 
     socket.on('nav', function(data) {
-        var dirs = getDirs(data.page);
+        var dirs = getDirs(data.page, data.ext);
         var user = data.user;
         var window = userLocation[user].window;
         highlightNewRed(window, user, data.direction, () => {
@@ -195,7 +195,7 @@ io.on('connection', function(socket) {
     });
 
     socket.on('leave_edit', function(data) {
-        var dirs = getDirs(data.page);
+        var dirs = getDirs(data.page, data.ext);
         var user = data.user;
         var window = userLocation[user].window;
         clearHighlights(window, user, () => {
